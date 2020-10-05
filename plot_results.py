@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8, vim: expandtab:ts=4 -*-
 
-from datetime import datetime, date, timedelta
+from datetime import datetime, timedelta
 from json import loads as json_loads
 
 from git import Repo, Actor
@@ -18,8 +18,8 @@ r.git.checkout('gh-pages')
 commit = r.commit('HEAD')
 commit_date = datetime.fromtimestamp(commit.committed_date)
 r.git.checkout('results')
-# Plot only when the last plot has been made more than one day ago!
-if datetime.now() - commit_date < timedelta(days=1) and commit.message != 'Initial commit\n':
+# Plot only when the last plot has been made more than two hours ago!
+if datetime.now() - commit_date < timedelta(hours=2) and commit.message != 'Initial commit\n':
     print(f'Nothing to do yet ({commit_date}).')
     exit(0)
 
@@ -39,6 +39,7 @@ for i in r.iter_commits():
 fig, (ax1, ax2, ax3) = plt.subplots(ncols=3)
 DPI = fig.get_dpi()
 fig.set_size_inches(1920.0/float(DPI), 1080.0/float(DPI))  # FULL HD image
+fig.suptitle(f'Last updated on {datetime.now()}', fontsize=16)
 
 ax1.plot(list(download_dict.keys()), list(download_dict.values()))
 ax1.set_title('Download')
@@ -68,8 +69,7 @@ r.git.checkout('gh-pages')
 plt.savefig('result.png')
 r.index.add(['result.png'])
 author = Actor('Speedtest-CLI Bot', 'bot@has.no.email')
-r.index.commit('Update automated speedtest graph on {0}'.format(date.today().isoformat()),
-               author=author, committer=author)
+r.index.commit('Update automated speedtest graph on {datetime.now()}', author=author, committer=author)
 r.remotes['origin'].push()
 r.git.checkout('results')
 print('Pushed!')
