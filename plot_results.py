@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8, vim: expandtab:ts=4 -*-
 
+import sys
 from datetime import datetime, timedelta
 from json import loads as json_loads
+from json.decoder import JSONDecodeError
 
 from git import Repo, Actor
 import matplotlib.pyplot as plt
@@ -26,7 +28,12 @@ if datetime.now() - commit_date < timedelta(hours=2) and commit.message != 'Init
 for i in r.iter_commits():
     if r.commit(i).message == 'Automated speedtest\n':
         # Get the data
-        j = json_loads(r.commit(i).tree['result.json'].data_stream.read())
+        try:
+            j = json_loads(r.commit(i).tree['result.json'].data_stream.read())
+        except JSONDecodeError:
+            print('ERROR: JSON reading failed for: ', i, file=sys.stderr)
+            continue
+
         download = j['download']
         upload = j['upload']
         ping = j['ping']
